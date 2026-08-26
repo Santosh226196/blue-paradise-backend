@@ -67,6 +67,10 @@ src/
 ```bash
 npm run check
 npm test
+npm run test:unit
+npm run test:integration
 ```
 
-The frontend currently does not attach its login JWT to business API requests. To preserve drop-in compatibility, business routes are not gated by `requireAuth`; the reusable JWT middleware is included at `src/middleware/auth.js` so routes can be protected after the frontend adds an `Authorization: Bearer ...` header.
+Integration tests use a disposable in-memory MongoDB on loopback port `27018`, never the database in `.env`. Set `TEST_MONGO_PORT` if that port is occupied.
+
+Login and password-reset flows use secure HTTP-only same-origin cookies as well as the response token expected by the frontend. All business routes require authentication. The frontend's relative `/api` requests send the same-origin login cookie automatically, so no API-path or payload changes are required.

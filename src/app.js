@@ -12,6 +12,7 @@ import attendanceRoutes from "./routes/attendance.routes.js";
 import duePaymentsRoutes from "./routes/duePayments.routes.js";
 import { membershipPlansRouter, staffRouter, scheduleRouter, announcementsRouter } from "./routes/resource.routes.js";
 import { errorHandler, notFound } from "./middleware/error.js";
+import { requireAuth } from "./middleware/auth.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -29,16 +30,16 @@ if (env.nodeEnv !== "test") app.use(morgan(env.nodeEnv === "production" ? "combi
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok", service: "blue-paradise-backend" }));
 app.use("/api/auth", authRoutes);
-app.use("/api/customers", customersRoutes);
-app.use("/api/billing", billingRoutes);
-app.use("/api/reports", reportsRoutes);
-app.use("/api/settings", settingsRoutes);
-app.use("/api/membership-plans", membershipPlansRouter);
-app.use("/api/staff", staffRouter);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/due-payments", duePaymentsRoutes);
-app.use("/api/schedule", scheduleRouter);
-app.use("/api/announcements", announcementsRouter);
+app.use("/api/customers", requireAuth, customersRoutes);
+app.use("/api/billing", requireAuth, billingRoutes);
+app.use("/api/reports", requireAuth, reportsRoutes);
+app.use("/api/settings", requireAuth, settingsRoutes);
+app.use("/api/membership-plans", requireAuth, membershipPlansRouter);
+app.use("/api/staff", requireAuth, staffRouter);
+app.use("/api/attendance", requireAuth, attendanceRoutes);
+app.use("/api/due-payments", requireAuth, duePaymentsRoutes);
+app.use("/api/schedule", requireAuth, scheduleRouter);
+app.use("/api/announcements", requireAuth, announcementsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

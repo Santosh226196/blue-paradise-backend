@@ -1,11 +1,24 @@
-const startOfDay = (date) => {
-  const value = new Date(date);
+function parseDate(date, field) {
+  if (date instanceof Date && !Number.isNaN(date.getTime())) return new Date(date);
+  if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw Object.assign(new Error(`${field} must use YYYY-MM-DD format`), { statusCode: 400 });
+  }
+  const [year, month, day] = date.split("-").map(Number);
+  const value = new Date(year, month - 1, day);
+  if (value.getFullYear() !== year || value.getMonth() !== month - 1 || value.getDate() !== day) {
+    throw Object.assign(new Error(`${field} is not a valid calendar date`), { statusCode: 400 });
+  }
+  return value;
+}
+
+const startOfDay = (date, field = "date") => {
+  const value = parseDate(date, field);
   value.setHours(0, 0, 0, 0);
   return value;
 };
 
-const endOfDay = (date) => {
-  const value = new Date(date);
+const endOfDay = (date, field = "date") => {
+  const value = parseDate(date, field);
   value.setHours(23, 59, 59, 999);
   return value;
 };
@@ -13,11 +26,16 @@ const endOfDay = (date) => {
 export function getDateRange({ period, from, to } = {}) {
   const now = new Date();
   if (from || to || period === "custom") {
-    return {
-      ...(from && { $gte: startOfDay(from) }),
-      ...(to && { $lte: endOfDay(to) }),
-    };
+    if (!from && !to) throw Object.assign(new Error("A custom report requires from or to"), { statusCode: 400 });
+    const range = { ...(from && { $gte: startOfDay(from, "from") }), ...(to && { $lte: endOfDay(to, "to") }) };
+    if (range.$gte && range.$lte && range.$gte > range.$lte) {
+      throw Object.assign(new Error("from must be on or before to"), { statusCode: 400 });
+    }
+    return range;
   }
+
+  const allowed = new Set([undefined, "today", "hourly", "week", "daily", "month", "monthly", "year", "yearly"]);
+  if (!allowed.has(period)) throw Object.assign(new Error("Unsupported report period"), { statusCode: 400 });
 
   const start = startOfDay(now);
   if (period === "today" || period === "hourly") return { $gte: start, $lte: endOfDay(now) };

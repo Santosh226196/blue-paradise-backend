@@ -19,8 +19,10 @@ export function crudController(Model, label, { listFilter, createDefaults, sort 
     update: async (req, res) => {
       const { id: _id, _id: mongoId, createdAt, updatedAt, ...changes } = req.body;
       void _id; void mongoId; void createdAt; void updatedAt;
-      const item = await Model.findByIdAndUpdate(req.params.id, changes, { new: true, runValidators: true });
+      const item = await Model.findById(req.params.id);
       if (!item) throw notFound(label);
+      item.set(changes);
+      await item.save();
       res.json(item);
     },
     remove: async (req, res) => {

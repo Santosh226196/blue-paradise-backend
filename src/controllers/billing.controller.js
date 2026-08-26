@@ -19,7 +19,8 @@ export async function getTransaction(req, res) {
 }
 
 export async function createTransaction(req, res) {
-  const customerExists = await Customer.exists({ _id: req.body.customerId });
+  const { customerId, serviceType, serviceName, amount, paymentMethod } = req.body;
+  const customerExists = await Customer.exists({ _id: customerId });
   if (!customerExists) return res.status(400).json({ message: "Customer not found" });
   const currentCounter = await Counter.findById("bill");
   if (!currentCounter) {
@@ -33,7 +34,7 @@ export async function createTransaction(req, res) {
   ]);
   const prefix = settings?.billPrefix ?? "BP";
   const billNumber = `${prefix}${String(counter.value).padStart(6, "0")}`;
-  const item = await Transaction.create({ ...req.body, billNumber, paidAt: new Date() });
+  const item = await Transaction.create({ customerId, serviceType, serviceName, amount, paymentMethod, billNumber, paidAt: new Date() });
   res.status(201).json(item);
 }
 

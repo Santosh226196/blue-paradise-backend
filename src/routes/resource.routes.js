@@ -5,6 +5,7 @@ import MembershipPlan from "../models/MembershipPlan.js";
 import Staff from "../models/Staff.js";
 import ScheduleSlot from "../models/ScheduleSlot.js";
 import Announcement from "../models/Announcement.js";
+import { DAYS } from "../models/constants.js";
 
 function resourceRouter(controller, { beforeId } = {}) {
   const router = Router();
@@ -23,14 +24,22 @@ export const staffRouter = resourceRouter(crudController(Staff, "Staff member", 
       const escaped = String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.$or = [{ name: new RegExp(escaped, "i") }, { mobile: new RegExp(escaped, "i") }];
     }
-    if (req.query.role) filter.role = req.query.role;
+    if (req.query.role) {
+      if (!["COACH", "LIFEGUARD", "RECEPTIONIST", "MANAGER"].includes(req.query.role)) {
+        throw Object.assign(new Error("Unsupported staff role"), { statusCode: 400 });
+      }
+      filter.role = req.query.role;
+    }
     return filter;
   },
   sort: { joinedAt: -1 },
 }));
 
 export const scheduleRouter = resourceRouter(crudController(ScheduleSlot, "Schedule slot", {
-  listFilter: (req) => req.query.day ? { day: req.query.day } : {},
+  listFilter: (req) => {
+    if (req.query.day && !DAYS.includes(req.query.day)) throw Object.assign(new Error("Unsupported schedule day"), { statusCode: 400 });
+    return req.query.day ? { day: req.query.day } : {};
+  },
   sort: { day: 1, startTime: 1 },
 }));
 

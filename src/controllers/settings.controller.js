@@ -18,13 +18,13 @@ export async function getSettings(_req, res) {
 }
 
 export async function updateSettings(req, res) {
-  const { id, _id, createdAt, updatedAt, ...changes } = req.body;
-  void id; void _id; void createdAt; void updatedAt;
-  await BusinessSettings.findOneAndUpdate(
-    { singletonKey: "default" }, { $setOnInsert: defaults }, { upsert: true, runValidators: true },
-  );
-  const settings = await BusinessSettings.findOneAndUpdate(
-    { singletonKey: "default" }, { $set: changes }, { new: true, runValidators: true },
-  );
+  const { id, _id, singletonKey, createdAt, updatedAt, ...changes } = req.body;
+  void id; void _id; void singletonKey; void createdAt; void updatedAt;
+  let settings = await BusinessSettings.findOne({ singletonKey: "default" });
+  if (!settings) settings = new BusinessSettings(defaults);
+  if (changes.printerSettings) changes.printerSettings = { ...settings.printerSettings?.toObject(), ...changes.printerSettings };
+  if (changes.clubTiming) changes.clubTiming = { ...settings.clubTiming?.toObject(), ...changes.clubTiming };
+  settings.set(changes);
+  await settings.save();
   res.json(settings);
 }

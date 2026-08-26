@@ -3,6 +3,8 @@ import Visit from "../models/Visit.js";
 import Membership from "../models/Membership.js";
 import Coaching from "../models/Coaching.js";
 import Transaction from "../models/Transaction.js";
+import Attendance from "../models/Attendance.js";
+import DuePayment from "../models/DuePayment.js";
 
 const missing = () => Object.assign(new Error("Customer not found"), { statusCode: 404 });
 
@@ -14,6 +16,9 @@ export async function listCustomers(req, res) {
     filter.$or = ["name", "mobile", "aadhaarNumber"].map((field) => ({ [field]: new RegExp(escaped, "i") }));
   }
   if (type) {
+    if (!["COACHING", "MEMBERSHIP", "MONTHLY", "QUARTERLY", "YEARLY"].includes(type)) {
+      return res.status(400).json({ message: "Unsupported customer type" });
+    }
     const ids = type === "COACHING"
       ? await Coaching.distinct("customerId", { status: "ACTIVE" })
       : await Membership.distinct("customerId", { status: "ACTIVE", ...(type !== "MEMBERSHIP" && { membershipType: type }) });
@@ -37,18 +42,22 @@ export async function createCustomer(req, res) {
 export async function updateCustomer(req, res) {
   const { id, _id, createdAt, updatedAt, ...body } = req.body;
   void id; void _id; void createdAt; void updatedAt;
-  const customer = await Customer.findByIdAndUpdate(req.params.id, body, { new: true, runValidators: true });
+  const customer = await Customer.findById(req.params.id);
   if (!customer) throw missing();
+  customer.set(body);
+  await customer.save();
   res.json(customer);
 }
 
 export async function deleteCustomer(req, res) {
-  const customer = await Customer.findByIdAndDelete(req.params.id);
+  const customer = await Customer.findById(req.params.id);
   if (!customer) throw missing();
   await Promise.all([
     Visit.deleteMany({ customerId: customer._id }), Membership.deleteMany({ customerId: customer._id }),
     Coaching.deleteMany({ customerId: customer._id }), Transaction.deleteMany({ customerId: customer._id }),
+    Attendance.deleteMany({ customerId: customer._id }), DuePayment.deleteMany({ customerId: customer._id }),
   ]);
+  await customer.deleteOne();
   res.json({ success: true });
 }
 

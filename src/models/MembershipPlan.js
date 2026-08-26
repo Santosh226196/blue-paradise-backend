@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 import { frontendJson } from "./plugins.js";
 
 const schema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  description: { type: String, default: "" },
+  name: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
+  description: { type: String, default: "", trim: true, maxlength: 1000 },
   duration: { type: String, enum: ["MONTHLY", "QUARTERLY", "YEARLY"], default: "MONTHLY" },
-  price: { type: Number, required: true, min: 0 },
-  features: [{ type: String, trim: true }],
+  price: { type: Number, required: true, min: 0.01, max: 10000000 },
+  features: [{ type: String, trim: true, maxlength: 100 }],
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 frontendJson(schema);

@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 import { ensureAdminUser } from "./controllers/auth.controller.js";
 
 let server;
+let shuttingDown = false;
 async function start() {
   await connectDatabase();
   await ensureAdminUser();
@@ -14,6 +15,8 @@ async function start() {
 }
 
 async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   console.log(`${signal} received, shutting down`);
   if (server) await new Promise((resolve) => server.close(resolve));
   await disconnectDatabase();
