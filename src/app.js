@@ -1,0 +1,45 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { env } from "./config/env.js";
+import authRoutes from "./routes/auth.routes.js";
+import customersRoutes from "./routes/customers.routes.js";
+import billingRoutes from "./routes/billing.routes.js";
+import reportsRoutes from "./routes/reports.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
+import duePaymentsRoutes from "./routes/duePayments.routes.js";
+import { membershipPlansRouter, staffRouter, scheduleRouter, announcementsRouter } from "./routes/resource.routes.js";
+import { errorHandler, notFound } from "./middleware/error.js";
+
+const app = express();
+app.disable("x-powered-by");
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || env.clientOrigins.includes("*") || env.clientOrigins.includes(origin)) return callback(null, true);
+    callback(Object.assign(new Error("Origin is not allowed by CORS"), { statusCode: 403 }));
+  },
+  credentials: true,
+}));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+if (env.nodeEnv !== "test") app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
+
+app.get("/api/health", (_req, res) => res.json({ status: "ok", service: "blue-paradise-backend" }));
+app.use("/api/auth", authRoutes);
+app.use("/api/customers", customersRoutes);
+app.use("/api/billing", billingRoutes);
+app.use("/api/reports", reportsRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/membership-plans", membershipPlansRouter);
+app.use("/api/staff", staffRouter);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/due-payments", duePaymentsRoutes);
+app.use("/api/schedule", scheduleRouter);
+app.use("/api/announcements", announcementsRouter);
+
+app.use(notFound);
+app.use(errorHandler);
+export default app;
