@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
+import { swaggerSpec } from "./config/swagger.js";
 import authRoutes from "./routes/auth.routes.js";
 import customersRoutes from "./routes/customers.routes.js";
 import billingRoutes from "./routes/billing.routes.js";
@@ -28,7 +30,19 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 if (env.nodeEnv !== "test") app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [System]
+ *     summary: Health check
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ */
 app.get("/api/health", (_req, res) => res.json({ status: "ok", service: "blue-paradise-backend" }));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", requireAuth, customersRoutes);
 app.use("/api/billing", requireAuth, billingRoutes);
