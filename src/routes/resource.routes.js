@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { crudController } from "../controllers/crud.controller.js";
+import { listBatchMembers, assignMembership, changeBatch } from "../controllers/batchAssignment.controller.js";
 import MembershipPlan from "../models/MembershipPlan.js";
+import MembershipBatch from "../models/MembershipBatch.js";
 import Staff from "../models/Staff.js";
 import ScheduleSlot from "../models/ScheduleSlot.js";
 import Announcement from "../models/Announcement.js";
@@ -11,6 +13,7 @@ import { DAYS } from "../models/constants.js";
  * @swagger
  * tags:
  *   - name: Membership Plans
+ *   - name: Membership Batches
  *   - name: Staff
  *   - name: Schedule
  *   - name: Announcements
@@ -71,6 +74,71 @@ import { DAYS } from "../models/constants.js";
  *   delete:
  *     tags: [Membership Plans]
  *     summary: Delete a plan
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
+/**
+ * @swagger
+ * /membership-batches:
+ *   get:
+ *     tags: [Membership Batches]
+ *     summary: List membership batches
+ *     responses:
+ *       200:
+ *         description: List of batches
+ *   post:
+ *     tags: [Membership Batches]
+ *     summary: Create a membership batch
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, startDate, endDate, maxMembers]
+ *             properties:
+ *               name: { type: string }
+ *               description: { type: string }
+ *               planId: { type: string }
+ *               startDate: { type: string, format: date }
+ *               endDate: { type: string, format: date }
+ *               maxMembers: { type: integer }
+ *               status: { type: string, enum: [ACTIVE, UPCOMING, COMPLETED, CANCELLED] }
+ *     responses:
+ *       201:
+ *         description: Created
+ */
+/**
+ * @swagger
+ * /membership-batches/{id}:
+ *   get:
+ *     tags: [Membership Batches]
+ *     summary: Get a batch by ID
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200:
+ *         description: Batch detail
+ *   put:
+ *     tags: [Membership Batches]
+ *     summary: Update a batch
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Updated
+ *   delete:
+ *     tags: [Membership Batches]
+ *     summary: Delete a batch
  *     parameters:
  *       - { in: path, name: id, required: true, schema: { type: string } }
  *     responses:
@@ -277,6 +345,14 @@ function resourceRouter(controller, { beforeId } = {}) {
 }
 
 export const membershipPlansRouter = resourceRouter(crudController(MembershipPlan, "Membership plan", { sort: { createdAt: -1 } }));
+
+export const membershipBatchesRouter = resourceRouter(crudController(MembershipBatch, "Membership batch", { sort: { createdAt: -1 } }), {
+  beforeId: (router) => {
+    router.get("/:id/members", asyncHandler(listBatchMembers));
+    router.post("/:id/assign", asyncHandler(assignMembership));
+    router.post("/:id/change", asyncHandler(changeBatch));
+  },
+});
 
 export const staffRouter = resourceRouter(crudController(Staff, "Staff member", {
   listFilter: (req) => {

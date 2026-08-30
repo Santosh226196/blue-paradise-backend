@@ -1,6 +1,8 @@
 import Customer from "../models/Customer.js";
 import Visit from "../models/Visit.js";
 import Membership from "../models/Membership.js";
+import MembershipPlan from "../models/MembershipPlan.js";
+import MembershipBatch from "../models/MembershipBatch.js";
 import Coaching from "../models/Coaching.js";
 import Transaction from "../models/Transaction.js";
 import Attendance from "../models/Attendance.js";
@@ -25,6 +27,11 @@ export async function listCustomers(req, res) {
     filter._id = { $in: ids };
   }
   res.json(await Customer.find(filter).sort({ createdAt: -1 }));
+}
+
+export async function listCustomersWithoutPlan(req, res) {
+  const withPlan = await Membership.distinct("customerId");
+  res.json(await Customer.find(withPlan.length ? { _id: { $nin: withPlan } } : {}).sort({ createdAt: -1 }));
 }
 
 export async function getCustomer(req, res) {
@@ -62,6 +69,22 @@ export async function deleteCustomer(req, res) {
 }
 
 export const getVisits = async (req, res) => res.json(await Visit.find({ customerId: req.params.id }).sort({ visitedAt: -1 }));
-export const getMemberships = async (req, res) => res.json(await Membership.find({ customerId: req.params.id }).sort({ startDate: -1 }));
+export const getMemberships = async (req, res) => {
+  const memberships = await Membership.find({ customerId: req.params.id }).sort({ startDate: -1 });
+  const enriched = await Promise.all(memberships.map(async (m) => {
+    const [plan, batch] = await Promise.all([
+      m.planId ? MembershipPlan.findById(m.planId).select("name totalSessions") : Promise.resolve(null),
+      m.batchId ? MembershipBatch.findById(m.batchId).select("name days startTime endTime coach level") : Promise.resolve(null),
+    ]);
+    return {
+      ...m.toJSON(),
+      planName: plan?.name ?? null,
+      planTotalSessions: plan?.totalSessions ?? null,
+      batchName: batch?.name ?? null,
+      batchSchedule: batch ? { days: batch.days, startTime: batch.startTime, endTime: batch.endTime, coach: batch.coach, level: batch.level } : null,
+    };
+  }));
+  res.json(enriched);
+};
 export const getCoaching = async (req, res) => res.json(await Coaching.find({ customerId: req.params.id }).sort({ startDate: -1 }));
 export const getTransactions = async (req, res) => res.json(await Transaction.find({ customerId: req.params.id }).sort({ paidAt: -1 }));

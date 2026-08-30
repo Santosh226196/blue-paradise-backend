@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { listTransactions, getTransaction, createTransaction, todayTransactions, dashboardStats } from "../controllers/billing.controller.js";
+import { listTransactions, getTransaction, createTransaction, todayTransactions, expiringMemberships, dashboardStats } from "../controllers/billing.controller.js";
 
 /**
  * @swagger
@@ -38,6 +38,16 @@ import { listTransactions, getTransaction, createTransaction, todayTransactions,
  *     responses:
  *       200:
  *         description: Today's transactions
+ */
+/**
+ * @swagger
+ * /billing/memberships/expiring:
+ *   get:
+ *     tags: [Billing]
+ *     summary: Get memberships expiring soon or already expired
+ *     responses:
+ *       200:
+ *         description: List of expiring membership members
  */
 /**
  * @swagger
@@ -92,6 +102,7 @@ import { listTransactions, getTransaction, createTransaction, todayTransactions,
 const router = Router();
 router.get("/dashboard-stats", asyncHandler(dashboardStats));
 router.get("/transactions/today", asyncHandler(todayTransactions));
+router.get("/memberships/expiring", asyncHandler(expiringMemberships));
 router.route("/transactions").get(asyncHandler(listTransactions)).post(asyncHandler(createTransaction));
 router.get("/transactions/:id", asyncHandler(getTransaction));
 export default router;

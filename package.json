@@ -11,6 +11,7 @@
     "seed": "node src/seed.js",
     "audit:db": "node scripts/auditDatabase.js",
     "check": "node scripts/check.js",
+    "build": "npm run check",
     "test": "node --test --test-concurrency=1",
     "test:unit": "node --test test/app.test.js test/dateRange.test.js test/models.test.js",
     "test:integration": "node --test --test-concurrency=1 test/integration.test.js"

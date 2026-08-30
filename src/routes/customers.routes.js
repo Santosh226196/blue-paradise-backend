@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { listCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer, getVisits, getMemberships, getCoaching, getTransactions } from "../controllers/customers.controller.js";
+import { listCustomers, listCustomersWithoutPlan, getCustomer, createCustomer, updateCustomer, deleteCustomer, getVisits, getMemberships, getCoaching, getTransactions } from "../controllers/customers.controller.js";
+import { activeBatchesForCustomer } from "../controllers/batchAssignment.controller.js";
 
 /**
  * @swagger
@@ -54,6 +55,21 @@ import { listCustomers, getCustomer, createCustomer, updateCustomer, deleteCusto
  *     responses:
  *       201:
  *         description: Created
+ */
+/**
+ * @swagger
+ * /customers/no-plan:
+ *   get:
+ *     tags: [Customers]
+ *     summary: List customers who have not purchased any plan yet
+ *     responses:
+ *       200:
+ *         description: List of customers without a plan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Customer' }
  */
 /**
  * @swagger
@@ -140,9 +156,11 @@ import { listCustomers, getCustomer, createCustomer, updateCustomer, deleteCusto
 
 const router = Router();
 router.route("/").get(asyncHandler(listCustomers)).post(asyncHandler(createCustomer));
+router.get("/no-plan", asyncHandler(listCustomersWithoutPlan));
 router.get("/:id/visits", asyncHandler(getVisits));
 router.get("/:id/memberships", asyncHandler(getMemberships));
 router.get("/:id/coaching", asyncHandler(getCoaching));
 router.get("/:id/transactions", asyncHandler(getTransactions));
+router.get("/:id/batches", asyncHandler(activeBatchesForCustomer));
 router.route("/:id").get(asyncHandler(getCustomer)).put(asyncHandler(updateCustomer)).delete(asyncHandler(deleteCustomer));
 export default router;

@@ -38,14 +38,30 @@ export const updateCustomerSchema = strictPartial(z.object(customerFields));
 
 export const transactionSchema = z.object({
   customerId: objectId, serviceType: z.enum(SERVICE_TYPES), serviceName: trimmed(2, 100, "Service name"),
-  amount, paymentMethod: z.enum(PAYMENT_METHODS),
+  amount, paymentMethod: z.enum(PAYMENT_METHODS), planId: objectId.optional(), batchId: objectId.optional(), startDate: dateString.optional(),
 }).strict();
 
 export const checkInSchema = z.object({ customerId: objectId, customerName: z.string().optional(), visitType: z.enum(VISIT_TYPES), lane: z.number().int().min(1).max(10).optional(), photoUrl: image }).strict();
 
-const planFields = { name: trimmed(2, 100, "Plan name"), description: z.string().trim().max(1000).default(""), duration: z.enum(["MONTHLY", "QUARTERLY", "YEARLY"]), price: amount, features: z.array(trimmed(1, 100, "Feature")).max(30), isActive: z.boolean() };
+const planFields = { name: trimmed(2, 100, "Plan name"), description: z.string().trim().max(1000).default(""), duration: z.enum(["HOURLY", "DAILY", "MONTHLY", "QUARTERLY", "YEARLY"]), price: amount, totalSessions: z.number().int().min(0).max(100000).nullable().optional(), features: z.array(trimmed(1, 100, "Feature")).max(30), isActive: z.boolean() };
 export const createPlanSchema = z.object(planFields).strict();
 export const updatePlanSchema = strictPartial(z.object(planFields));
+
+const memoryFields = {
+  name: trimmed(2, 100, "Batch name"), description: z.string().trim().max(1000).default(""), planId: objectId.optional(),
+  startDate: dateString, endDate: dateString,
+  days: z.array(z.enum(DAYS)).max(7).optional().default([]),
+  startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/).optional().default(""),
+  endTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/).optional().default(""),
+  level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional().default("BEGINNER"),
+  ageGroup: z.enum(["KIDS", "TEENS", "ADULTS", "ALL"]).optional().default("ALL"),
+  coachId: objectId.optional().nullable().default(null),
+  coach: z.string().trim().max(100).optional().default(""),
+  maxMembers: z.number().int().min(1).max(100000), currentMembers: z.number().int().min(0).max(100000).optional(),
+  status: z.enum(["ACTIVE", "UPCOMING", "COMPLETED", "CANCELLED"]).optional(),
+};
+export const createBatchSchema = z.object(memoryFields).strict();
+export const updateBatchSchema = strictPartial(z.object(memoryFields));
 
 const staffFields = { name: trimmed(2, 100, "Name"), mobile: phone, email: email.optional(), role: z.enum(["COACH", "LIFEGUARD", "RECEPTIONIST", "MANAGER"]), specialization: optionalTrimmed(200), isAvailable: z.boolean(), photoUrl: image };
 export const createStaffSchema = z.object(staffFields).strict();
