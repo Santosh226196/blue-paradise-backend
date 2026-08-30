@@ -11,6 +11,7 @@
     "seed": "node src/seed.js",
     "audit:db": "node scripts/auditDatabase.js",
     "check": "node scripts/check.js",
+    "build": "npm run check",
     "test": "node --test --test-concurrency=1",
     "test:unit": "node --test test/app.test.js test/dateRange.test.js test/models.test.js",
     "test:integration": "node --test --test-concurrency=1 test/integration.test.js"
@@ -28,6 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
     "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

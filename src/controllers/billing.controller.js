@@ -3,7 +3,14 @@ import Counter from "../models/Counter.js";
 import BusinessSettings from "../models/BusinessSettings.js";
 import Customer from "../models/Customer.js";
 import Visit from "../models/Visit.js";
+import Membership from "../models/Membership.js";
+import MembershipPlan from "../models/MembershipPlan.js";
+import MembershipBatch from "../models/MembershipBatch.js";
+import BatchAssignment from "../models/BatchAssignment.js";
 import { dayBounds, getDateRange } from "../utils/dateRange.js";
+
+const DURATION_DAYS = { HOURLY: 0, DAILY: 1, MONTHLY: 30, QUARTERLY: 90, YEARLY: 365 };
+const badRequest = (message) => Object.assign(new Error(message), { statusCode: 400 });
 
 const missing = () => Object.assign(new Error("Transaction not found"), { statusCode: 404 });
 
@@ -19,7 +26,7 @@ export async function getTransaction(req, res) {
 }
 
 export async function createTransaction(req, res) {
-  const { customerId, serviceType, serviceName, amount, paymentMethod } = req.body;
+  const { customerId, serviceType, serviceName, amount, paymentMethod, planId, batchId, startDate } = req.body;
   const customerExists = await Customer.exists({ _id: customerId });
   if (!customerExists) return res.status(400).json({ message: "Customer not found" });
   const currentCounter = await Counter.findById("bill");
@@ -35,11 +42,79 @@ export async function createTransaction(req, res) {
   const prefix = settings?.billPrefix ?? "BP";
   const billNumber = `${prefix}${String(counter.value).padStart(6, "0")}`;
   const item = await Transaction.create({ customerId, serviceType, serviceName, amount, paymentMethod, billNumber, paidAt: new Date() });
+
+  if (planId && serviceType === "MEMBERSHIP") {
+    const plan = await MembershipPlan.findById(planId);
+    if (plan) {
+      const start = startDate ? new Date(startDate) : new Date();
+      const days = DURATION_DAYS[plan.duration] ?? 0;
+      const end = new Date(start);
+      if (days > 0) end.setDate(end.getDate() + days);
+      else end.setHours(end.getHours() + 1);
+
+      if (batchId) {
+        const batch = await MembershipBatch.findById(batchId);
+        if (!batch) throw badRequest("Batch not found");
+        if (batch.status !== "ACTIVE") throw badRequest("Batch is not active");
+        const occupied = await BatchAssignment.countDocuments({ batchId: batch._id, status: "ACTIVE" });
+        if (occupied >= batch.maxMembers) throw badRequest("Batch is full");
+      }
+
+      const membership = await Membership.create({
+        customerId,
+        planId: plan._id,
+        batchId: batchId || null,
+        membershipType: plan.duration,
+        startDate: start,
+        endDate: end,
+        amount: plan.price,
+        totalSessions: plan.totalSessions ?? null,
+        usedSessions: 0,
+      });
+
+      if (batchId) {
+        await BatchAssignment.create({
+          batchId,
+          membershipId: membership._id,
+          customerId,
+          status: "ACTIVE",
+          effectiveFrom: start,
+          assignedAt: new Date(),
+        });
+        await MembershipBatch.findByIdAndUpdate(batchId, { $inc: { currentMembers: 1 } });
+      }
+    }
+  }
+
   res.status(201).json(item);
 }
 
 export async function todayTransactions(_req, res) {
   res.json(await Transaction.find({ paidAt: dayBounds() }).sort({ paidAt: -1 }));
+}
+
+export async function expiringMemberships(_req, res) {
+  const now = new Date();
+  const soon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const memberships = await Membership.find({
+    status: "ACTIVE",
+    endDate: { $lte: soon },
+  }).sort({ endDate: 1 });
+
+  const items = await Promise.all(memberships.map(async (m) => {
+    const customer = await Customer.findById(m.customerId).select("name mobile");
+    const expired = m.endDate < now;
+    return {
+      customerId: m.customerId,
+      customerName: customer?.name ?? "Unknown",
+      customerMobile: customer?.mobile ?? "",
+      membershipType: m.membershipType,
+      endDate: m.endDate,
+      status: expired ? "EXPIRED" : "EXPIRING_SOON",
+      daysLeft: Math.round((m.endDate - now) / (24 * 60 * 60 * 1000)),
+    };
+  }));
+  res.json(items);
 }
 
 export async function dashboardStats(_req, res) {
