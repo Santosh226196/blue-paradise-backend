@@ -12,6 +12,7 @@ const schema = new mongoose.Schema({
   },
   billPrefix: { type: String, default: "BP", trim: true, uppercase: true, match: [/^[A-Z0-9]{1,8}$/, "billPrefix must be 1-8 letters or numbers"] },
   billFooter: { type: String, default: "Thank you for visiting Blue Paradise!" },
+  scannerImage: { type: String, default: null },
   clubTiming: {
     openTime: { type: String, default: "05:00" },
     closeTime: { type: String, default: "22:00" },

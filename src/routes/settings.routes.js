@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { getSettings, updateSettings } from "../controllers/settings.controller.js";
+import { getSettings, updateSettings, uploadScanner, deleteScanner, getScannerPublic } from "../controllers/settings.controller.js";
+import { requireAuth } from "../middleware/auth.js";
 
 /**
  * @swagger
@@ -34,4 +35,11 @@ import { getSettings, updateSettings } from "../controllers/settings.controller.
 
 const router = Router();
 router.route("/").get(asyncHandler(getSettings)).put(asyncHandler(updateSettings));
+router.post("/scanner", asyncHandler(uploadScanner));
+router.delete("/scanner", asyncHandler(deleteScanner));
+
+const publicRouter = Router();
+publicRouter.get("/scanner", asyncHandler(getScannerPublic));
+
 export default router;
+export { publicRouter };

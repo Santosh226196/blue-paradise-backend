@@ -28,3 +28,31 @@ export async function updateSettings(req, res) {
   await settings.save();
   res.json(settings);
 }
+
+export async function uploadScanner(req, res) {
+  const { scannerImage } = req.body;
+  if (!scannerImage || typeof scannerImage !== "string") {
+    return res.status(400).json({ message: "scannerImage is required" });
+  }
+  let settings = await BusinessSettings.findOne({ singletonKey: "default" });
+  if (!settings) settings = new BusinessSettings(defaults);
+  settings.scannerImage = scannerImage;
+  await settings.save();
+  res.json({ success: true, scannerImage: settings.scannerImage });
+}
+
+export async function deleteScanner(_req, res) {
+  let settings = await BusinessSettings.findOne({ singletonKey: "default" });
+  if (!settings) settings = new BusinessSettings(defaults);
+  settings.scannerImage = null;
+  await settings.save();
+  res.json({ success: true });
+}
+
+export async function getScannerPublic(_req, res) {
+  const settings = await BusinessSettings.findOne({ singletonKey: "default" }).select("scannerImage businessName");
+  if (!settings || !settings.scannerImage) {
+    return res.status(404).json({ message: "No scanner image available" });
+  }
+  res.json({ scannerImage: settings.scannerImage, businessName: settings.businessName });
+}
