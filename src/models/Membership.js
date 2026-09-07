@@ -5,7 +5,7 @@ const schema = new mongoose.Schema({
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true },
   planId: { type: mongoose.Schema.Types.ObjectId, ref: "MembershipPlan", default: null },
   batchId: { type: mongoose.Schema.Types.ObjectId, ref: "MembershipBatch", default: null },
-  membershipType: { type: String, enum: ["DAILY", "WEEKEND", "MONTHLY", "THREE_MONTHS", "SIX_MONTHS", "YEARLY", "FAMILY", "STUDENT"], required: true },
+  membershipType: { type: String, enum: ["DAILY", "WEEKEND", "MONTHLY", "QUARTERLY", "THREE_MONTHS", "SIX_MONTHS", "YEARLY", "FAMILY", "STUDENT"], required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   amount: { type: Number, required: true, min: 0.01, max: 10000000 },

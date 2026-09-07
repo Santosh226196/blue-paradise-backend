@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { crudController } from "../controllers/crud.controller.js";
-import { listBatchMembers, assignMembership, changeBatch } from "../controllers/batchAssignment.controller.js";
+import { listBatchMembers, assignMembership, changeBatch, unassignBatch } from "../controllers/batchAssignment.controller.js";
 import MembershipPlan from "../models/MembershipPlan.js";
 import MembershipBatch from "../models/MembershipBatch.js";
 import Staff from "../models/Staff.js";
@@ -351,6 +351,7 @@ export const membershipBatchesRouter = resourceRouter(crudController(MembershipB
     router.get("/:id/members", asyncHandler(listBatchMembers));
     router.post("/:id/assign", asyncHandler(assignMembership));
     router.post("/:id/change", asyncHandler(changeBatch));
+    router.post("/:id/unassign", asyncHandler(unassignBatch));
   },
 });
 
