@@ -43,7 +43,7 @@ export const transactionSchema = z.object({
 
 export const checkInSchema = z.object({ customerId: objectId, customerName: z.string().optional(), visitType: z.enum(VISIT_TYPES), lane: z.number().int().min(1).max(10).optional(), photoUrl: image }).strict();
 
-const planFields = { name: trimmed(2, 100, "Plan name"), description: z.string().trim().max(1000).default(""), duration: z.enum(["DAILY", "WEEKEND", "MONTHLY", "THREE_MONTHS", "SIX_MONTHS", "YEARLY", "FAMILY", "STUDENT"]), price: amount, totalSessions: z.number().int().min(0).max(100000).nullable().optional(), features: z.array(trimmed(1, 100, "Feature")).max(30), isActive: z.boolean() };
+const planFields = { name: trimmed(2, 100, "Plan name"), description: z.string().trim().max(1000).default(""), duration: z.enum(["DAILY", "WEEKEND", "MONTHLY", "QUARTERLY", "THREE_MONTHS", "SIX_MONTHS", "YEARLY", "FAMILY", "STUDENT"]), price: amount, totalSessions: z.number().int().min(0).max(100000).nullable().optional(), features: z.array(trimmed(1, 100, "Feature")).max(30), isActive: z.boolean() };
 export const createPlanSchema = z.object(planFields).strict();
 export const updatePlanSchema = strictPartial(z.object(planFields));
 
