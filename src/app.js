@@ -12,7 +12,7 @@ import reportsRoutes from "./routes/reports.routes.js";
 import settingsRoutes, { publicRouter as settingsPublicRoutes } from "./routes/settings.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
 import duePaymentsRoutes from "./routes/duePayments.routes.js";
-import { membershipPlansRouter, membershipBatchesRouter, staffRouter, scheduleRouter, announcementsRouter } from "./routes/resource.routes.js";
+import { membershipPlansRouter, membershipBatchesRouter, staffRouter, scheduleRouter, announcementsRouter, poolServicesRouter } from "./routes/resource.routes.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -56,6 +56,7 @@ app.use("/api/attendance", requireAuth, attendanceRoutes);
 app.use("/api/due-payments", requireAuth, duePaymentsRoutes);
 app.use("/api/schedule", requireAuth, scheduleRouter);
 app.use("/api/announcements", requireAuth, announcementsRouter);
+app.use("/api/pool-services", requireAuth, poolServicesRouter);
 
 app.use(notFound);
 app.use(errorHandler);
