@@ -9,7 +9,7 @@ import MembershipBatch from "../models/MembershipBatch.js";
 import BatchAssignment from "../models/BatchAssignment.js";
 import { dayBounds, getDateRange } from "../utils/dateRange.js";
 
-const DURATION_DAYS = { HOURLY: 0, DAILY: 1, MONTHLY: 30, QUARTERLY: 90, YEARLY: 365 };
+const DURATION_DAYS = { DAILY: 1, WEEKEND: 2, MONTHLY: 30, THREE_MONTHS: 90, SIX_MONTHS: 180, YEARLY: 365, FAMILY: 30, STUDENT: 30 };
 const badRequest = (message) => Object.assign(new Error(message), { statusCode: 400 });
 
 const missing = () => Object.assign(new Error("Transaction not found"), { statusCode: 404 });
@@ -47,10 +47,9 @@ export async function createTransaction(req, res) {
     const plan = await MembershipPlan.findById(planId);
     if (plan) {
       const start = startDate ? new Date(startDate) : new Date();
-      const days = DURATION_DAYS[plan.duration] ?? 0;
+      const days = DURATION_DAYS[plan.duration] ?? 30;
       const end = new Date(start);
-      if (days > 0) end.setDate(end.getDate() + days);
-      else end.setHours(end.getHours() + 1);
+      end.setDate(end.getDate() + days);
 
       if (batchId) {
         const batch = await MembershipBatch.findById(batchId);

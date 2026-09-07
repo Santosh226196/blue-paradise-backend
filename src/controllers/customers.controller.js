@@ -18,7 +18,7 @@ export async function listCustomers(req, res) {
     filter.$or = ["name", "mobile", "aadhaarNumber"].map((field) => ({ [field]: new RegExp(escaped, "i") }));
   }
   if (type) {
-    if (!["COACHING", "MEMBERSHIP", "MONTHLY", "QUARTERLY", "YEARLY"].includes(type)) {
+    if (!["COACHING", "MEMBERSHIP", "DAILY", "WEEKEND", "MONTHLY", "THREE_MONTHS", "SIX_MONTHS", "YEARLY", "FAMILY", "STUDENT"].includes(type)) {
       return res.status(400).json({ message: "Unsupported customer type" });
     }
     const ids = type === "COACHING"

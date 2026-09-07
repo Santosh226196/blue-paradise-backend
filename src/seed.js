@@ -24,9 +24,14 @@ async function seed() {
   } }, { upsert: true });
 
   if (await MembershipPlan.countDocuments() === 0) await MembershipPlan.insertMany([
+    { name: "Day Pass", description: "Single day pool access", duration: "DAILY", price: 300, features: ["Pool access", "Towel service"] },
+    { name: "Weekend Pass", description: "Saturday & Sunday pool access", duration: "WEEKEND", price: 500, features: ["Pool access", "Locker", "Towel service"] },
     { name: "Basic Monthly", description: "Standard monthly pool access", duration: "MONTHLY", price: 1500, features: ["Pool access", "Locker"] },
-    { name: "Quarterly Plus", description: "Three months with coaching discount", duration: "QUARTERLY", price: 4000, features: ["Pool access", "Locker", "Towel service"] },
+    { name: "3-Month Plan", description: "Three months pool access", duration: "THREE_MONTHS", price: 4000, features: ["Pool access", "Locker", "Towel service"] },
+    { name: "6-Month Plan", description: "Six months pool access", duration: "SIX_MONTHS", price: 7000, features: ["Pool access", "Private locker", "Towel service"] },
     { name: "Annual Premium", description: "Full year unlimited access", duration: "YEARLY", price: 12000, features: ["Unlimited pool access", "Private locker", "Guest passes"] },
+    { name: "Family Plan", description: "Monthly access for entire family", duration: "FAMILY", price: 3500, features: ["Pool access for 4", "Family locker", "Guest passes"] },
+    { name: "Student Plan", description: "Discounted monthly access for students", duration: "STUDENT", price: 1000, features: ["Pool access", "Locker", "Valid student ID required"] },
   ]);
 
   let staff = await Staff.find();
