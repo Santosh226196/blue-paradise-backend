@@ -9,7 +9,7 @@ import MembershipBatch from "../models/MembershipBatch.js";
 import BatchAssignment from "../models/BatchAssignment.js";
 import { dayBounds, getDateRange } from "../utils/dateRange.js";
 
-const DURATION_DAYS = { DAILY: 1, WEEKEND: 2, MONTHLY: 30, THREE_MONTHS: 90, SIX_MONTHS: 180, YEARLY: 365, FAMILY: 30, STUDENT: 30 };
+const DURATION_DAYS = { DAILY: 1, WEEKEND: 2, MONTHLY: 30, QUARTERLY: 90, THREE_MONTHS: 90, SIX_MONTHS: 180, YEARLY: 365, FAMILY: 30, STUDENT: 30 };
 const badRequest = (message) => Object.assign(new Error(message), { statusCode: 400 });
 
 const missing = () => Object.assign(new Error("Transaction not found"), { statusCode: 404 });
@@ -55,8 +55,36 @@ export async function createTransaction(req, res) {
         const batch = await MembershipBatch.findById(batchId);
         if (!batch) throw badRequest("Batch not found");
         if (batch.status !== "ACTIVE") throw badRequest("Batch is not active");
-        const occupied = await BatchAssignment.countDocuments({ batchId: batch._id, status: "ACTIVE" });
+        const occupied = await BatchAssignment.countDocuments({ batchId: batch._id, status: "ACTIVE", customerId: { $ne: customerId } });
         if (occupied >= batch.maxMembers) throw badRequest("Batch is full");
+      }
+
+      const previousActive = await Membership.find({ customerId, status: "ACTIVE" }).select("_id batchId");
+      if (previousActive.length > 0) {
+        const previousIds = previousActive.map((m) => m._id);
+        await Membership.updateMany(
+          { _id: { $in: previousIds } },
+          { $set: { status: "EXPIRED" } },
+        );
+        const activeAssignments = await BatchAssignment.find({
+          membershipId: { $in: previousIds },
+          status: "ACTIVE",
+        });
+        if (activeAssignments.length > 0) {
+          await BatchAssignment.updateMany(
+            { membershipId: { $in: previousIds }, status: "ACTIVE" },
+            { $set: { status: "REMOVED", removedAt: new Date() } },
+          );
+          const batchInc = activeAssignments.reduce((acc, a) => {
+            acc[a.batchId] = (acc[a.batchId] ?? 0) + 1;
+            return acc;
+          }, {});
+          await Promise.all(
+            Object.entries(batchInc).map(([batchId, count]) =>
+              MembershipBatch.findByIdAndUpdate(batchId, { $inc: { currentMembers: -count } }),
+            ),
+          );
+        }
       }
 
       const membership = await Membership.create({

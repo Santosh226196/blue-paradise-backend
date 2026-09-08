@@ -133,6 +133,31 @@ export async function changeBatch(req, res) {
   res.json({ success: true, membershipId: membership._id, batchId: batch._id });
 }
 
+export async function unassignBatch(req, res) {
+  const { membershipId, reason } = req.body;
+  const batch = await MembershipBatch.findById(req.params.id);
+  if (!batch) throw notFound("Batch");
+  if (!membershipId) throw badRequest("membershipId is required");
+
+  const membership = await Membership.findById(membershipId);
+  if (!membership) throw notFound("Membership");
+  if (membership.status !== "ACTIVE") throw badRequest("Only an active membership can be unassigned");
+  if (!membership.batchId || membership.batchId.toString() !== batch._id.toString()) {
+    throw badRequest("This membership is not assigned to this batch");
+  }
+
+  await BatchAssignment.updateOne(
+    { batchId: batch._id, membershipId: membership._id, status: "ACTIVE" },
+    { $set: { status: "REMOVED", removedAt: new Date(), reason: reason || "" } },
+  );
+
+  membership.batchId = null;
+  await membership.save();
+  await MembershipBatch.findByIdAndUpdate(batch._id, { $inc: { currentMembers: -1 } });
+
+  res.json({ success: true, membershipId: membership._id, batchId: batch._id });
+}
+
 export async function activeBatchesForCustomer(req, res) {
   const memberships = await Membership.find({
     customerId: req.params.customerId,
