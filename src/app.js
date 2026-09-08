@@ -12,7 +12,8 @@ import reportsRoutes from "./routes/reports.routes.js";
 import settingsRoutes, { publicRouter as settingsPublicRoutes } from "./routes/settings.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
 import duePaymentsRoutes from "./routes/duePayments.routes.js";
-import { membershipPlansRouter, membershipBatchesRouter, staffRouter, scheduleRouter, announcementsRouter } from "./routes/resource.routes.js";
+import costumesRoutes from "./routes/costumes.routes.js";
+import { membershipPlansRouter, membershipBatchesRouter, staffRouter, scheduleRouter, announcementsRouter, poolServicesRouter } from "./routes/resource.routes.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { requireAuth } from "./middleware/auth.js";
 
@@ -22,6 +23,7 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({
   origin(origin, callback) {
     if (!origin || env.clientOrigins.includes("*") || env.clientOrigins.includes(origin)) return callback(null, true);
+    if (/\.vercel\.app$/.test(origin) || /https:\/\/blue-paradise-webapp(\.vercel\.app|$)/.test(origin)) return callback(null, true);
     callback(Object.assign(new Error("Origin is not allowed by CORS"), { statusCode: 403 }));
   },
   credentials: true,
@@ -56,6 +58,8 @@ app.use("/api/attendance", requireAuth, attendanceRoutes);
 app.use("/api/due-payments", requireAuth, duePaymentsRoutes);
 app.use("/api/schedule", requireAuth, scheduleRouter);
 app.use("/api/announcements", requireAuth, announcementsRouter);
+app.use("/api/pool-services", requireAuth, poolServicesRouter);
+app.use("/api/costumes", requireAuth, costumesRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

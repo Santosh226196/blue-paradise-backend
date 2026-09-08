@@ -7,6 +7,7 @@ import MembershipBatch from "../models/MembershipBatch.js";
 import Staff from "../models/Staff.js";
 import ScheduleSlot from "../models/ScheduleSlot.js";
 import Announcement from "../models/Announcement.js";
+import PoolService from "../models/PoolService.js";
 import { DAYS } from "../models/constants.js";
 
 /**
@@ -381,9 +382,12 @@ export const scheduleRouter = resourceRouter(crudController(ScheduleSlot, "Sched
 }));
 
 const announcementsCrud = crudController(Announcement, "Announcement", { sort: { createdAt: -1 } });
+export const poolServicesRouter = resourceRouter(crudController(PoolService, "Pool service", { sort: { createdAt: -1 } }));
 export const announcementsRouter = resourceRouter(announcementsCrud, {
-  beforeId: (router) => router.get("/active", asyncHandler(async (_req, res) => {
-    const now = new Date();
-    res.json(await Announcement.find({ isActive: true, $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }] }).sort({ createdAt: -1 }));
-  })),
+  beforeId: (router) => {
+    router.get("/active", asyncHandler(async (_req, res) => {
+      const now = new Date();
+      res.json(await Announcement.find({ isActive: true, $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }] }).sort({ createdAt: -1 }));
+    }));
+  },
 });

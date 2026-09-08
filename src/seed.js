@@ -10,6 +10,8 @@ import MembershipPlan from "./models/MembershipPlan.js";
 import Staff from "./models/Staff.js";
 import ScheduleSlot from "./models/ScheduleSlot.js";
 import Announcement from "./models/Announcement.js";
+import PoolService from "./models/PoolService.js";
+import Costume from "./models/Costume.js";
 import DuePayment from "./models/DuePayment.js";
 import BusinessSettings from "./models/BusinessSettings.js";
 import { DAYS } from "./models/constants.js";
@@ -74,6 +76,61 @@ async function seed() {
     { day: "Saturday", startTime: "11:30", endTime: "13:00", type: "OPEN_SWIM", label: "Family Swim", maxCapacity: 30 },
   ]);
   if (await Announcement.countDocuments() === 0) await Announcement.create({ title: "Welcome to Blue Paradise", message: "Pool schedules and notices are now available in the app.", priority: "MEDIUM", isActive: true });
+  if (await PoolService.countDocuments() === 0) await PoolService.insertMany([
+    { name: "Filter Service", category: "Equipment", frequencyDays: 7, status: "upcoming" },
+    { name: "Tank Cleaning", category: "Cleaning", frequencyDays: 14, status: "overdue" },
+    { name: "Water Cleaning", category: "Cleaning", frequencyDays: 7, status: "upcoming" },
+    { name: "Chlorine Check", category: "Chemical", frequencyDays: 3, status: "upcoming" },
+    { name: "pH Level Testing", category: "Chemical", frequencyDays: 3, status: "completed" },
+  ]);
+  if (await Costume.countDocuments() === 0) await Costume.insertMany([
+    {
+      name: "Classic Swim Trunks", type: "MENS", price: 699, rentPrice: 150,
+      variants: [
+        { size: "M", color: "Navy", stock: 12 },
+        { size: "L", color: "Navy", stock: 10 },
+        { size: "M", color: "Black", stock: 8 },
+        { size: "L", color: "Black", stock: 20 },
+      ],
+    },
+    {
+      name: "Pro Racing Swimsuit", type: "MENS", price: 999, rentPrice: 200,
+      variants: [
+        { size: "L", color: "Black", stock: 8 },
+        { size: "XL", color: "Black", stock: 5 },
+        { size: "L", color: "Blue", stock: 30 },
+      ],
+    },
+    {
+      name: "Comfort Fit Bikini", type: "WOMENS", price: 849, rentPrice: 180,
+      variants: [
+        { size: "S", color: "Teal", stock: 15 },
+        { size: "M", color: "Teal", stock: 18 },
+        { size: "M", color: "Pink", stock: 24 },
+      ],
+    },
+    {
+      name: "One-Piece Aqua Suit", type: "WOMENS", price: 1199, rentPrice: 250,
+      variants: [
+        { size: "M", color: "Coral", stock: 10 },
+        { size: "L", color: "Coral", stock: 14 },
+      ],
+    },
+    {
+      name: "Kids Splash Trunks", type: "KIDS", price: 499, rentPrice: 100,
+      variants: [
+        { size: "8Y", color: "Blue", stock: 25 },
+        { size: "10Y", color: "Blue", stock: 20 },
+        { size: "12Y", color: "Green", stock: 18 },
+      ],
+    },
+    {
+      name: "Family Swim Pack", type: "UNISEX", price: 2499, rentPrice: 500,
+      variants: [
+        { size: "Free", color: "Multi", stock: 5 },
+      ],
+    },
+  ]);
   console.log("Seed complete. Existing collections were preserved.");
 }
 
