@@ -50,7 +50,7 @@ export async function assignMembership(req, res) {
   const { membershipId } = req.body;
   const batch = await MembershipBatch.findById(req.params.id);
   if (!batch) throw notFound("Batch");
-  if (batch.status !== "ACTIVE") throw badRequest("Batch is not active");
+  if (batch.status !== "ACTIVE" && batch.status !== "UPCOMING") throw badRequest("Only active or upcoming batches can be assigned");
   if (!membershipId) throw badRequest("membershipId is required");
 
   const membership = await Membership.findById(membershipId);
@@ -103,7 +103,7 @@ export async function changeBatch(req, res) {
 
   const batch = await MembershipBatch.findById(newBatchId);
   if (!batch) throw notFound("Batch");
-  if (batch.status !== "ACTIVE") throw badRequest("Batch is not active");
+  if (batch.status !== "ACTIVE" && batch.status !== "UPCOMING") throw badRequest("Only active or upcoming batches can be assigned");
 
   const occupied = await BatchAssignment.countDocuments({ batchId: batch._id, status: "ACTIVE" });
   if (occupied >= batch.maxMembers) throw badRequest("Batch is full");
