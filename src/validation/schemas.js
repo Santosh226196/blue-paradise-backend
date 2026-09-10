@@ -5,7 +5,11 @@ import { DAYS, PAYMENT_METHODS, SERVICE_TYPES, VISIT_TYPES } from "../models/con
 const trimmed = (min, max, label) => z.string().trim().min(min, `${label} must be at least ${min} characters`).max(max, `${label} must be at most ${max} characters`);
 const optionalTrimmed = (max) => z.string().trim().max(max).optional();
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Must be a valid ID");
-const image = z.string().max(8_000_000, "Image must be smaller than 8 MB").refine(isImageValue, "Must be an HTTP image URL or supported image data").optional();
+const image = z.union([
+  z.string().max(8_000_000, "Image must be smaller than 8 MB").refine(isImageValue, "Must be an HTTP image URL or supported image data"),
+  z.literal(""),
+  z.null(),
+]).optional();
 const phone = z.union([z.string(), z.number().int()]).transform(normalizePhone).refine((value) => PHONE_PATTERN.test(value ?? ""), "Enter a valid Indian 10-digit mobile number");
 const aadhaar = z.string().transform(normalizeAadhaar).refine((value) => AADHAAR_PATTERN.test(value ?? ""), "Enter a valid 12-digit Aadhaar number").optional();
 const email = z.string().transform(normalizeEmail).refine((value) => EMAIL_PATTERN.test(value), "Enter a valid email address");

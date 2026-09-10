@@ -21,5 +21,6 @@ export function normalizeAadhaar(value) {
 
 export function isImageValue(value) {
   if (!value) return true;
-  return /^https?:\/\/[^\s]+$/i.test(value) || /^data:image\/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=\s]+$/.test(value);
+  return /^https?:\/\/[^\s]+$/i.test(value) || /^data:image\/(?:png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/i.test(value);
 }
+
