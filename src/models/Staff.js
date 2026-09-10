@@ -10,7 +10,7 @@ const schema = new mongoose.Schema({
   role: { type: String, enum: ["COACH", "LIFEGUARD", "RECEPTIONIST", "MANAGER"], default: "COACH" },
   specialization: { type: String, trim: true, maxlength: 200 },
   isAvailable: { type: Boolean, default: true },
-  photoUrl: { type: String, validate: { validator: isImageValue, message: "photoUrl must be a valid image" } },
+  photoUrl: { type: String, trim: true, validate: { validator: isImageValue, message: "photoUrl must be a valid image" } },
   joinedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 

@@ -88,7 +88,12 @@ test("membership plan and staff CRUD/filter flows", async () => {
   assert.equal(plans.body[0].price, 1200);
   await api.post("/api/membership-plans").send({ name: "Bad", duration: "FOREVER", price: -1 }).expect(400);
 
-  const staff = await api.post("/api/staff").send({ name: "Coach Edge", mobile: "9000000010", role: "COACH", specialization: "Testing" }).expect(201);
+  const fakeImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+  const staff = await api.post("/api/staff").send({ name: "Coach Edge", mobile: "9000000010", role: "COACH", specialization: "Testing", photoUrl: fakeImg }).expect(201);
+  assert.equal(staff.body.photoUrl, fakeImg);
+  await api.put(`/api/staff/${staff.body.id}`).send({ photoUrl: "https://example.com/avatar.jpg" }).expect(200);
+  const updatedStaff = await api.get(`/api/staff/${staff.body.id}`).expect(200);
+  assert.equal(updatedStaff.body.photoUrl, "https://example.com/avatar.jpg");
   const filtered = await api.get("/api/staff").query({ search: "Coach", role: "COACH" }).expect(200);
   assert.equal(filtered.body.length, 1);
   await api.get("/api/staff").query({ role: "INVALID" }).expect(400);
