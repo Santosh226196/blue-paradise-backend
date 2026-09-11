@@ -14,9 +14,46 @@ const badRequest = (message) => Object.assign(new Error(message), { statusCode: 
 
 const missing = () => Object.assign(new Error("Transaction not found"), { statusCode: 404 });
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parsePageLimit(query) {
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 12));
+  return { page, limit };
+}
+
 export async function listTransactions(req, res) {
+  const { page, limit } = parsePageLimit(req.query);
   const hasRange = req.query.from || req.query.to || req.query.period;
-  res.json(await Transaction.find(hasRange ? { paidAt: getDateRange(req.query) } : {}).sort({ paidAt: -1 }));
+  let filter = hasRange ? { paidAt: getDateRange(req.query) } : {};
+  const search = String(req.query.search || "").trim();
+  if (search) {
+    const q = { $regex: escapeRegExp(search), $options: "i" };
+    const customerIds = await Customer.find({ $or: [{ name: q }, { mobile: q }] })
+      .select("_id")
+      .then((docs) => docs.map((c) => c._id));
+    const or = [{ billNumber: q }];
+    if (customerIds.length) or.push({ customerId: { $in: customerIds } });
+    const searchFilter = { $or: or };
+    filter = Object.keys(filter).length
+      ? { $and: [filter, searchFilter] }
+      : searchFilter;
+  }
+  const [items, stats] = await Promise.all([
+    Transaction.find(filter)
+      .sort({ paidAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Transaction.aggregate([
+      { $match: filter },
+      { $group: { _id: null, count: { $sum: 1 }, totalAmount: { $sum: "$amount" } } },
+    ]),
+  ]);
+  const total = stats[0]?.count ?? 0;
+  const totalAmount = Math.round((stats[0]?.totalAmount ?? 0) * 100) / 100;
+  res.json({ items, total, totalAmount, page, limit, pages: Math.ceil(total / limit) || 1 });
 }
 
 export async function getTransaction(req, res) {
