@@ -7,6 +7,7 @@ import Coaching from "../models/Coaching.js";
 import Transaction from "../models/Transaction.js";
 import Attendance from "../models/Attendance.js";
 import DuePayment from "../models/DuePayment.js";
+import CostumeTransaction from "../models/CostumeTransaction.js";
 
 const missing = () => Object.assign(new Error("Customer not found"), { statusCode: 404 });
 
@@ -88,3 +89,5 @@ export const getMemberships = async (req, res) => {
 };
 export const getCoaching = async (req, res) => res.json(await Coaching.find({ customerId: req.params.id }).sort({ startDate: -1 }));
 export const getTransactions = async (req, res) => res.json(await Transaction.find({ customerId: req.params.id }).sort({ paidAt: -1 }));
+export const getCostumeTransactions = async (req, res) =>
+  res.json(await CostumeTransaction.find({ customerId: req.params.id }).sort({ createdAt: -1 }));

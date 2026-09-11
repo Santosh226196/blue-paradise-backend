@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { listCustomers, listCustomersWithoutPlan, getCustomer, createCustomer, updateCustomer, deleteCustomer, getVisits, getMemberships, getCoaching, getTransactions } from "../controllers/customers.controller.js";
+import { listCustomers, listCustomersWithoutPlan, getCustomer, createCustomer, updateCustomer, deleteCustomer, getVisits, getMemberships, getCoaching, getTransactions, getCostumeTransactions } from "../controllers/customers.controller.js";
 import { activeBatchesForCustomer } from "../controllers/batchAssignment.controller.js";
 
 /**
@@ -161,6 +161,7 @@ router.get("/:id/visits", asyncHandler(getVisits));
 router.get("/:id/memberships", asyncHandler(getMemberships));
 router.get("/:id/coaching", asyncHandler(getCoaching));
 router.get("/:id/transactions", asyncHandler(getTransactions));
+router.get("/:id/costume-transactions", asyncHandler(getCostumeTransactions));
 router.get("/:id/batches", asyncHandler(activeBatchesForCustomer));
 router.route("/:id").get(asyncHandler(getCustomer)).put(asyncHandler(updateCustomer)).delete(asyncHandler(deleteCustomer));
 export default router;
