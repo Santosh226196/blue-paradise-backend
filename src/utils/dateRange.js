@@ -34,12 +34,15 @@ export function getDateRange({ period, from, to } = {}) {
     return range;
   }
 
-  const allowed = new Set([undefined, "today", "hourly", "week", "daily", "month", "monthly", "year", "yearly"]);
+  const allowed = new Set([undefined, "all", "today", "hourly", "week", "daily", "month", "monthly", "year", "yearly"]);
   if (!allowed.has(period)) throw Object.assign(new Error("Unsupported report period"), { statusCode: 400 });
+
+  if (period === "all") return {};
 
   const start = startOfDay(now);
   if (period === "today" || period === "hourly") return { $gte: start, $lte: endOfDay(now) };
   if (period === "week" || period === "daily") start.setDate(start.getDate() - 6);
+  else if (period === "month") start.setDate(1);
   else if (period === "monthly") {
     start.setDate(1);
     start.setMonth(start.getMonth() - 11);
